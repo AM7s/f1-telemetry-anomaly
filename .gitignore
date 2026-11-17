@@ -1,0 +1,20 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+frontend/node_modules/
+
+# Docker
+*.log
+
+# Окружение
+.env
+.env.local
+
+# Системные файлы
+.DS_Store
+Thumbs.db

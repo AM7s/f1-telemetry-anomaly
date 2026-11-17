@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap');
+
+/* =========================================
+   ПЕРЕМЕННЫЕ ТЕМ (По умолчанию - ТЕМНАЯ)
+   ========================================= */
+:root {
+  --bg-main: #15151e;
+  --bg-card: #1f1f27;
+  --bg-card-header: #25252f;
+  --bg-input: #2a2a35;
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --border-color: #333333;
+  --accent-red: #e10600;
+  --accent-green: #00d2be;
+}
+
+/* СВЕТЛАЯ ТЕМА */
+.light-theme {
+  --bg-main: #f4f4f4;
+  --bg-card: #ffffff;
+  --bg-card-header: #f0f0f0;
+  --bg-input: #ffffff;
+  --text-main: #15151e;
+  --text-muted: #666666;
+  --border-color: #dddddd;
+}
+
+/* =========================================
+   БАЗОВЫЕ СТИЛИ
+   ========================================= */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Titillium Web', sans-serif;
+  transition: background-color 0.3s, color 0.3s; /* Плавный переход */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* =========================================
+   КОМПОНЕНТЫ F1
+   ========================================= */
+.f1-card {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-top: 4px solid var(--accent-red);
+  transition: background-color 0.3s;
+}
+
+.f1-header-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.f1-select, .f1-input {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: 'Titillium Web', sans-serif;
+  outline: none;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.f1-select:focus, .f1-input:focus {
+  border-color: var(--accent-red);
+}
+
+.f1-button {
+  background-color: var(--accent-red);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: 'Titillium Web', sans-serif;
+}
+
+.f1-button:hover {
+  background-color: #b30500;
+}
+
+/* Стили для таблиц */
+.f1-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.f1-table th {
+  text-align: left;
+  padding: 12px 8px;
+  background-color: var(--bg-card-header);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: background-color 0.3s;
+}
+
+.f1-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.f1-table tr:hover {
+  background-color: rgba(128, 128, 128, 0.1);
+}
+
+/* Цвета F1 */
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+.text-yellow { color: #f1c40f; }
+
+/* Стили для логотипа F1 */
+.f1-logo {
+  height: 24px;
+  margin-right: 16px;
+  transition: filter 0.3s;
+}
+
+/* По умолчанию (в темной теме) логотип белый */
+.f1-logo {
+  filter: brightness(0) invert(1); 
+}
+
+/* В светлой теме делаем его красным (фирменный цвет #e10600) */
+.light-theme .f1-logo {
+  /* Сначала делаем белым, затем накладываем красный оттенок */
+  filter: brightness(0) invert(13%) sepia(96%) saturate(7482%) hue-rotate(357deg) brightness(96%) contrast(114%);
+}

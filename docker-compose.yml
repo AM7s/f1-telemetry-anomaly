@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: ./backend
+    container_name: f1-backend
+    ports:
+      - "8000:8000"
+    # Если нужно, добавьте переменные окружения, например, токен OpenF1
+    # environment:
+    #   - OPENF1_TOKEN=${OPENF1_TOKEN}
+    networks:
+      - f1-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: f1-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      # Монтируем код, чтобы изменения на хосте сразу отражались в контейнере
+      - ./frontend:/app
+      # Анонимный volume для node_modules, чтобы не перезаписывать их с хоста
+      - /app/node_modules
+    environment:
+      # Указываем фронтенду, где искать бэкенд.
+      
+      - VITE_API_BASE_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    networks:
+      - f1-network
+
+networks:
+  f1-network:
+    driver: bridge
