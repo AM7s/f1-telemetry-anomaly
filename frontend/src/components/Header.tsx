@@ -28,7 +28,7 @@ export function Header() {
         <img 
           src="https://upload.wikimedia.org/wikipedia/commons/3/33/F1.svg" 
           alt="F1" 
-          style={{ height: 24, marginRight: 16, filter: isDark ? 'none' : 'invert(1)' }} 
+          className="f1-logo" 
         />
         <span style={{ fontSize: '1.2rem', fontWeight: 700, fontStyle: 'italic', letterSpacing: '1px', color: isDark ? '#fff' : '#000' }}>
           TELEMETRY EXPLORER
