@@ -30,6 +30,7 @@ export interface SessionInfo {
   year: number;
   date_start: string;
   meeting_key: number;
+  location: string;
 }
 
 export interface DriverInfo {

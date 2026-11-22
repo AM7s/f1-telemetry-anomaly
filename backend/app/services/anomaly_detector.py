@@ -2,41 +2,53 @@ import pandas as pd
 import numpy as np
 from typing import List
 from app.models.schemas import Anomaly
+from app.config import settings
 
-def detect_anomalies_zscore(df: pd.DataFrame, column: str = "speed", window: int = 20, threshold: float = 2.5) -> List[Anomaly]:
+def detect_anomalies_zscore(
+    df: pd.DataFrame,
+    column: str = "speed",
+    window: int = 30,
+    threshold: float = 2.5,
+) -> List[Anomaly]:
+    """
+    Поиск аномалий исключительно методом скользящего Z-score.
+    """
     if df.empty or column not in df.columns:
         return []
     
-    raw_anomalies = []
-    
-    # --- 1. Поиск резкого торможения ---
-    df['delta_speed'] = df[column].diff()
-    hard_braking_mask = df['delta_speed'] < -15.0
-    for idx in df.index[hard_braking_mask]:
-        raw_anomalies.append({"index": int(idx), "z": -99.0})
-
-    # --- 2. Поиск статистических выбросов (Z-score) ---
+    # Работаем с копией, чтобы не мутировать исходный DataFrame
     series = df[column].copy()
-    rolling_mean = series.rolling(window=window, center=True, min_periods=window//2).mean()
-    rolling_std = series.rolling(window=window, center=True, min_periods=window//2).std()
+    
+    # Скользящее среднее и стандартное отклонение
+    rolling_mean = series.rolling(window=window, center=True, min_periods=window // 2).mean()
+    rolling_std = series.rolling(window=window, center=True, min_periods=window // 2).std()
+    
+    # Защита от деления на ноль (когда машина едет с постоянной скоростью)
     rolling_std = rolling_std.replace(0, np.nan)
+    
+    # Вычисляем Z-score
     z_scores = np.abs((series - rolling_mean) / rolling_std)
     
-    stat_mask = z_scores > threshold
-    for idx in df.index[stat_mask]:
-        raw_anomalies.append({"index": int(idx), "z": round(float(z_scores.loc[idx]), 2)})
+    # Находим индексы, где Z-score превышает порог
+    anomaly_mask = z_scores > threshold
+    
+    raw_anomalies = []
+    for idx in df.index[anomaly_mask]:
+        raw_anomalies.append({
+            "index": int(idx),
+            "z": round(float(z_scores.loc[idx]), 2)
+        })
 
-    # --- 3. ГРУППИРОВКА АНОМАЛИЙ ---
+    # --- ГРУППИРОВКА (Чтобы не было красных полос) ---
     if not raw_anomalies:
         return []
 
-    # Сортируем по индексу
     raw_anomalies.sort(key=lambda x: x["index"])
     
     grouped = []
     current_group = [raw_anomalies[0]]
 
-    # Если между аномалиями меньше 8 сэмплов (около 2 секунд), считаем это одной зоной
+    # Объединяем близкие точки (например, если между ними меньше 8 сэмплов)
     for i in range(1, len(raw_anomalies)):
         prev_idx = current_group[-1]["index"]
         curr_idx = raw_anomalies[i]["index"]
@@ -50,11 +62,11 @@ def detect_anomalies_zscore(df: pd.DataFrame, column: str = "speed", window: int
     if current_group:
         grouped.append(current_group)
 
-    # Формируем итоговый список: берем только центр каждой группы
+    # Формируем итоговый список: берем центр каждой группы
     final_anomalies = []
     for group in grouped:
-        # Находим индекс самой "сильной" аномалии в группе (минимальная скорость)
-        best_item = min(group, key=lambda x: df.loc[x["index"], column])
+        # Берем точку с максимальным Z-score (самую аномальную)
+        best_item = max(group, key=lambda x: x["z"])
         idx = best_item["index"]
         
         final_anomalies.append(Anomaly(

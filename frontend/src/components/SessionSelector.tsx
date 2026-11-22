@@ -9,12 +9,36 @@ interface Props {
 
 const YEARS = [2023, 2024, 2025, 2026];
 
+// ИСПОЛЬЗУЕМ РЕАЛЬНЫЕ ЭМОДЗИ-ФЛАГИ
+const COUNTRY_FLAGS: Record<string, string> = {
+  'Bahrain': '🇧🇭',
+  'Saudi Arabia': '🇸🇦',
+  'Australia': '🇦🇺',
+  'Azerbaijan': '🇦🇿',
+  'United States': '🇺🇸',
+  'Italy': '🇮🇹',
+  'Monaco': '🇲🇨',
+  'Spain': '🇪🇸',
+  'Canada': '🇨🇦',
+  'Austria': '🇦🇹',
+  'United Kingdom': '🇬🇧',
+  'Hungary': '🇭🇺',
+  'Belgium': '🇧🇪',
+  'Netherlands': '🇳🇱',
+  'Singapore': '🇸🇬',
+  'Japan': '🇯🇵',
+  'Qatar': '🇶🇦',
+  'Mexico': '🇲🇽',
+  'Brazil': '🇧🇷',
+  'China': '🇨🇳',
+};
+
 export function SessionSelector({ onSessionSelected, onlyRaces = false }: Props) {
   const [year, setYear] = useState(2026);
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loading, setLoading] = useState(false);
   
-  const [selectedEvent, setSelectedEvent] = useState<string>('');
+  const [selectedMeetingKey, setSelectedMeetingKey] = useState<number | null>(null);
   const [selectedSessionType, setSelectedSessionType] = useState<string>('');
 
   useEffect(() => {
@@ -25,12 +49,14 @@ export function SessionSelector({ onSessionSelected, onlyRaces = false }: Props)
       .finally(() => setLoading(false));
   }, [year]);
 
-  // Группируем по названию Гран-При
-  const events = Array.from(new Set(sessions.map(s => s.country_name)));
-  const eventSessions = sessions.filter(s => s.country_name === selectedEvent);
+  const uniqueEvents = Array.from(
+    new Map(sessions.map(s => [s.meeting_key, s])).values()
+  ).sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
 
-  const handleEventClick = (eventName: string) => {
-    setSelectedEvent(eventName);
+  const eventSessions = sessions.filter(s => s.meeting_key === selectedMeetingKey);
+
+  const handleEventClick = (meetingKey: number) => {
+    setSelectedMeetingKey(meetingKey);
     setSelectedSessionType(''); 
   };
 
@@ -53,27 +79,43 @@ export function SessionSelector({ onSessionSelected, onlyRaces = false }: Props)
         {loading && <span style={{ alignSelf: 'center', color: 'var(--text-muted)' }}>Загрузка...</span>}
       </div>
 
-      {/* Сетка этапов */}
       <div className="event-grid">
-        {events.map(eventName => {
-          const eventInfo = sessions.find(s => s.country_name === eventName);
+        {uniqueEvents.map(event => {
+          // Пытаемся получить локацию. Если ее нет, берем название сессии и обрезаем.
+          let locationText = event.location || '';
+          
+          if (!locationText && event.session_name) {
+            // Например: "Miami Grand Prix" -> "Miami"
+            locationText = event.session_name.split(' ')[0];
+          }
+
+          // Форматируем название
+          const displayName = event.country_name === 'United States' 
+            ? `${event.country_name} (${locationText})` 
+            : event.country_name;
+            
+          // Берем эмодзи-флаг
+          const flag = COUNTRY_FLAGS[event.country_name] || '🏁';
+
           return (
             <div 
-              key={eventName}
-              className={`event-card ${selectedEvent === eventName ? 'active' : ''}`}
-              onClick={() => handleEventClick(eventName)}
+              key={event.meeting_key}
+              className={`event-card ${selectedMeetingKey === event.meeting_key ? 'active' : ''}`}
+              onClick={() => handleEventClick(event.meeting_key)}
             >
               <div className="event-date">
-                {eventInfo ? new Date(eventInfo.date_start).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' }) : ''}
+                {new Date(event.date_start).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })}
               </div>
-              <div className="event-name">{eventName}</div>
+              <div className="event-name">
+                <span style={{ marginRight: 8 }}>{flag}</span>
+                {displayName}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Кнопки сессий */}
-      {selectedEvent && (
+      {selectedMeetingKey && (
         <div className="session-tabs">
           {eventSessions
             .filter(s => !onlyRaces || s.session_name.includes('Race') || s.session_name.includes('Sprint'))
